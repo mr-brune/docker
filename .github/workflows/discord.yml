@@ -1,17 +1,23 @@
 name: Build and Publish Custom Caddy
 
 on:
+  schedule:
+    - cron: '0 0 */15 * *'
   workflow_dispatch:
     inputs:
       tag:
         description: 'Docker image tag'
         required: false
-        default: 'latest'
+        default: 'discord'
         type: string
   push:
     branches: [ main, master ]
+    paths:
+      - 'discord/**'
   pull_request:
     branches: [ main, master ]
+    paths:
+      - 'discord/**'
 
 env:
   REGISTRY: ghcr.io
@@ -46,15 +52,15 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=raw,value=${{ inputs.tag || 'latest' }}
+          type=raw,value=discord
           type=sha,prefix={{branch}}-
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: ./Dockerfile
-        platforms: linux/amd64,linux/arm64
+        file: ./discord/Dockerfile
+        platforms: linux/amd64
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
