@@ -1,4 +1,4 @@
-name: Build and Publish Custom Caddy
+name: Build and Publish Discord
 
 on:
   schedule:
