@@ -15,7 +15,7 @@ ENV BITRATE="192k"
 ENV MUSIC_DIR="/music"
 ENV APP_DIR="/app"
 ENV EXCLUDE_FILE_NAME="exclude_paths.list"
-ENV SLEEP_SECONDS="60"
+ENV SLEEP_SECONDS="20"
 
 # Create a directory for the conversion script and exclusion list
 WORKDIR ${APP_DIR}
