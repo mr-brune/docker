@@ -81,8 +81,14 @@ exec_script='
         filename_no_ext=$(basename "$filepath" .flac) 
         output_file="$dir/$filename_no_ext.opus"
 
-        echo "[CONVERT] Converting: \"$filepath\" to \"$output_file\" with bitrate $BITRATE_FOR_CONVERSION"
-        if ffmpeg -nostdin -loglevel error -i "$filepath" -c:a libopus -b:a "$BITRATE_FOR_CONVERSION" "$output_file"; then
+        # Check if opus file already exists and warn about overwrite
+        if [ -f "$output_file" ]; then
+            echo "[CONVERT] Converting: \"$filepath\" to \"$output_file\" with bitrate $BITRATE_FOR_CONVERSION (OVERWRITING existing opus file)"
+        else
+            echo "[CONVERT] Converting: \"$filepath\" to \"$output_file\" with bitrate $BITRATE_FOR_CONVERSION"
+        fi
+        
+        if ffmpeg -nostdin -loglevel error -y -i "$filepath" -c:a libopus -b:a "$BITRATE_FOR_CONVERSION" "$output_file"; then
             echo "[SUCCESS] Converted: \"$filepath\". Removing original."
             rm "$filepath"
         else
