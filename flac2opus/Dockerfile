@@ -7,7 +7,7 @@ LABEL description="Converts FLAC files to Opus, with an external exclusion list.
 
 # Install dependencies: ffmpeg (with libopus), bash, findutils, coreutils, opus-tools
 RUN apk update && \
-    apk add --no-cache ffmpeg bash findutils coreutils opus-tools && \
+    apk add --no-cache bash findutils coreutils opus-tools && \
     rm -rf /var/cache/apk/*
 
 # Set environment variables
