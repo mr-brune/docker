@@ -1,0 +1,12 @@
+# Lines starting with # are comments. Empty lines are ignored.
+# Paths should be relative to the root of your music directory.
+# Use * as a wildcard. Example: to exclude all contents of a folder.
+
+EVA OST/*
+bellofigo/*
+EVA OST/Albums/1995 - OST 1/*
+EVA OST/Albums/1995 - OST 2/*
+EVA OST/Albums/1995 - OST 3/*
+EVA OST/Albums/1997 - The End of Evangelion/*
+EVA OST/Albums/2008 - EVA 1.0 You Are (Not) Alone/*
+Tame Impala - Currents B-Sides & Remixes (2017)(FLAC)(WEB)/*
