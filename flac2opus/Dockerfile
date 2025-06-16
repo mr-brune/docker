@@ -5,9 +5,9 @@ FROM alpine:latest
 LABEL maintainer="Mrbrune"
 LABEL description="Converts FLAC files to Opus, with an external exclusion list."
 
-# Install dependencies: ffmpeg (with libopus), bash, findutils, coreutils
+# Install dependencies: ffmpeg (with libopus), bash, findutils, coreutils, opus-tools
 RUN apk update && \
-    apk add --no-cache ffmpeg bash findutils coreutils && \
+    apk add --no-cache ffmpeg bash findutils coreutils opus-tools && \
     rm -rf /var/cache/apk/*
 
 # Set environment variables
@@ -15,6 +15,7 @@ ENV BITRATE="192k"
 ENV MUSIC_DIR="/music"
 ENV APP_DIR="/app"
 ENV EXCLUDE_FILE_NAME="exclude_paths.list"
+ENV SLEEP_SECONDS="0"
 
 # Create a directory for the conversion script and exclusion list
 WORKDIR ${APP_DIR}

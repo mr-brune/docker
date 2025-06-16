@@ -7,13 +7,18 @@ DEFAULT_BITRATE="192k"
 DEFAULT_MUSIC_DIR="/music"
 DEFAULT_APP_DIR="/app"
 DEFAULT_EXCLUDE_FILE_NAME="exclude_paths.list"
+DEFAULT_SLEEP_SECONDS="0"
 
 # --- Read Environment Variables ---
 BITRATE="${BITRATE:-$DEFAULT_BITRATE}"
 MUSIC_DIR="${MUSIC_DIR:-$DEFAULT_MUSIC_DIR}"
 APP_DIR="${APP_DIR:-$DEFAULT_APP_DIR}"
 EXCLUDE_FILE_NAME="${EXCLUDE_FILE_NAME:-$DEFAULT_EXCLUDE_FILE_NAME}"
+SLEEP_SECONDS="${SLEEP_SECONDS:-$DEFAULT_SLEEP_SECONDS}"
 EXCLUDE_FILE_PATH="${APP_DIR}/${EXCLUDE_FILE_NAME}"
+
+# Convert bitrate from FFmpeg format (192k) to opusenc format (192)
+OPUSENC_BITRATE="${BITRATE%k}"
 
 # --- Helper Functions ---
 log_info() {
@@ -30,7 +35,8 @@ log_error() {
 
 # --- Main Script ---
 log_info "Starting FLAC to Opus conversion script."
-log_info "Bitrate: $BITRATE"
+log_info "Bitrate: $BITRATE (opusenc bitrate: ${OPUSENC_BITRATE})"
+log_info "Sleep between files: ${SLEEP_SECONDS}s"
 log_info "Music directory: $MUSIC_DIR"
 log_info "Exclusion file path: $EXCLUDE_FILE_PATH (from EXCLUDE_FILE_NAME: $EXCLUDE_FILE_NAME)"
 
@@ -43,7 +49,6 @@ cd "$MUSIC_DIR" || { log_error "Failed to change directory to '$MUSIC_DIR'."; ex
 log_info "Changed working directory to $(pwd)"
 
 # Base find arguments
-# -mindepth 2: As per your original script, processes files in subdirectories, not the root of MUSIC_DIR.
 find_args=("." "-mindepth" "2" "-type" "f" "-name" "*.flac")
 
 if [ -f "$EXCLUDE_FILE_PATH" ]; then
@@ -57,7 +62,6 @@ if [ -f "$EXCLUDE_FILE_PATH" ]; then
         fi
         
         # Ensure path starts with ./ for find's -path predicate when searching from .
-        # Example: if line is "EVA OST/*", it becomes "./EVA OST/*"
         local_path_pattern="$line"
         if [[ "$local_path_pattern" != "./"* ]]; then
             local_path_pattern="./$local_path_pattern"
@@ -71,10 +75,10 @@ else
 fi
 
 # Subshell script for -exec
-# $1 will be BITRATE, subsequent arguments ($@) will be file paths
 exec_script='
-    BITRATE_FOR_CONVERSION="$1" 
-    shift # Remove bitrate from argument list, remaining are files
+    BITRATE_FOR_CONVERSION="$1"
+    SLEEP_TIME="$2" 
+    shift 2 # Remove bitrate and sleep from argument list
     for filepath do
         dir=$(dirname "$filepath")
         # Get filename without .flac extension
@@ -83,28 +87,41 @@ exec_script='
 
         # Check if opus file already exists and warn about overwrite
         if [ -f "$output_file" ]; then
-            echo "[CONVERT] Converting: \"$filepath\" to \"$output_file\" with bitrate $BITRATE_FOR_CONVERSION (OVERWRITING existing opus file)"
+            echo "[CONVERT] Converting: \"$filepath\" to \"$output_file\" with bitrate ${BITRATE_FOR_CONVERSION} (OVERWRITING existing opus file)"
+            # Remove existing file first as opusenc will prompt for overwrite
+            rm "$output_file"
         else
-            echo "[CONVERT] Converting: \"$filepath\" to \"$output_file\" with bitrate $BITRATE_FOR_CONVERSION"
+            echo "[CONVERT] Converting: \"$filepath\" to \"$output_file\" with bitrate ${BITRATE_FOR_CONVERSION}"
         fi
         
-        if ffmpeg -nostdin -loglevel error -y -i "$filepath" -c:a libopus -b:a "$BITRATE_FOR_CONVERSION" "$output_file"; then
+        # Use opusenc for better cover art and metadata handling
+        if opusenc --bitrate ${BITRATE_FOR_CONVERSION} --comp 10 --quiet "$filepath" "$output_file"; then
             echo "[SUCCESS] Converted: \"$filepath\". Removing original."
             rm "$filepath"
         else
             echo "[FAILURE] Error converting: \"$filepath\". Original not removed."
         fi
+        
+        # Sleep between conversions to reduce heat and system load
+        if [ "$SLEEP_TIME" -gt 0 ]; then
+            minutes=$((SLEEP_TIME / 60))
+            seconds=$((SLEEP_TIME % 60))
+            if [ "$minutes" -gt 0 ]; then
+                echo "[INFO] Cooling down for ${minutes}m ${seconds}s..."
+            else
+                echo "[INFO] Cooling down for ${seconds}s..."
+            fi
+            sleep "$SLEEP_TIME"
+        fi
     done
 '
 # Add the -exec part to find_args
-# "bash_exec_script" is a placeholder for $0 in the subshell
-find_args+=("-exec" "bash" "-c" "$exec_script" "bash_exec_script" "$BITRATE" "{}" "+")
+find_args+=("-exec" "bash" "-c" "$exec_script" "bash_exec_script" "$OPUSENC_BITRATE" "$SLEEP_SECONDS" "{}" "+")
 
 log_info "Starting find and convert process..."
 # Execute the find command
 if ! find "${find_args[@]}"; then
     log_warn "The find command may have encountered issues with some files."
-    # The script continues due to set -e not being triggered by find's exec returning non-zero for some items
 fi
 
 log_info "Conversion process finished."
