@@ -44,7 +44,7 @@ log_info "Changed working directory to $(pwd)"
 
 # Base find arguments
 # -mindepth 2: As per your original script, processes files in subdirectories, not the root of MUSIC_DIR.
-find_args=("."; "-mindepth"; "2"; "-type"; "f"; "-name"; "*.flac")
+find_args=("." "-mindepth" "2" "-type" "f" "-name" "*.flac")
 
 if [ -f "$EXCLUDE_FILE_PATH" ]; then
     log_info "Applying exclusions from $EXCLUDE_FILE_PATH"
@@ -64,7 +64,7 @@ if [ -f "$EXCLUDE_FILE_PATH" ]; then
         fi
 
         log_info "Excluding pattern: ${local_path_pattern}"
-        find_args+=("-not"; "-path"; "${local_path_pattern}")
+        find_args+=("-not" "-path" "${local_path_pattern}")
     done < "$EXCLUDE_FILE_PATH"
 else
     log_warn "Exclusion file '$EXCLUDE_FILE_PATH' not found. No paths will be excluded."
@@ -92,7 +92,7 @@ exec_script='
 '
 # Add the -exec part to find_args
 # "bash_exec_script" is a placeholder for $0 in the subshell
-find_args+=("-exec"; "bash"; "-c"; "$exec_script"; "bash_exec_script"; "$BITRATE"; "{}"; "+")
+find_args+=("-exec" "bash" "-c" "$exec_script" "bash_exec_script" "$BITRATE" "{}" "+")
 
 log_info "Starting find and convert process..."
 # Execute the find command
