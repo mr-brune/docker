@@ -2,7 +2,7 @@ name: Build and Publish film-telegrambot
 
 on:
   schedule:
-    - cron: '0 0 */15 * *'
+    - cron: '0 0 1 * *'
   workflow_dispatch:
     inputs:
       tag:
