@@ -26,6 +26,7 @@ RUN CGO_ENABLED=1 \
         --with github.com/hslatman/caddy-crowdsec-bouncer/http \
         --with github.com/mholt/caddy-dynamicdns \
         --with github.com/mholt/caddy-l4
+        --with github.com/mietzen/caddy-dynamicdns-cmd-source
 
 # Stage 2: Runtime
 FROM dunglas/frankenphp:php8.4-alpine AS runner
